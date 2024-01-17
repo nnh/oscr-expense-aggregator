@@ -1,13 +1,29 @@
 function editSheetValues(){
   const inputSheetName = "List";
   const targetYears = [2022, 2023];
+  const colNumber = new Map([
+    ["startMonth", 2],
+    ["monthlyAverage", 15],
+  ])
   targetYears.forEach(year => {
     const property_text = "ssId" + String(year);
     const inputValues = SpreadsheetApp.openById(PropertiesService.getScriptProperties().getProperty(property_text)).getSheetByName(inputSheetName).getDataRange().getValues();
     const sheet1 = getSheetAndSetValues_(String(year) + "_1", inputValues);
-    sheet1.hideColumns(15, 5);
+    sheet1.hideColumns(Number(colNumber.get("monthlyAverage")), sheet1.getLastColumn()-Number(colNumber.get("monthlyAverage"))+1);
     const sheet2 = getSheetAndSetValues_(String(year) + "_2", inputValues);
-    sheet2.hideColumns(2, 12);
+    const sheet2SumRowNumber = sheet2.getRange(`A2:A${sheet2.getLastRow()}`).getValues().map((x, idx) => x[0] === "計" ? idx : null).filter(x => x !== null)[0] + 2;
+    for (let i = 2; i < sheet2SumRowNumber; i++){
+      sheet2.getRange(i, Number(colNumber.get("monthlyAverage"))).setValue(Math.round(sheet2.getRange(i, Number(colNumber.get("monthlyAverage"))).getValue()));
+      sheet2.getRange(i, Number(colNumber.get("monthlyAverage"))+1).setValue(Math.round(sheet2.getRange(i, Number(colNumber.get("monthlyAverage"))+1).getValue()));
+      sheet2.getRange(i, Number(colNumber.get("monthlyAverage"))+2).setFormula(`=O${i}-P${i}`);
+    }
+    sheet2.getRange(sheet2SumRowNumber, Number(colNumber.get("monthlyAverage"))).setFormula(`=sum(O2:O${sheet2SumRowNumber-1})`);
+    sheet2.getRange(sheet2SumRowNumber, Number(colNumber.get("monthlyAverage"))+1).setFormula(`=sum(P2:P${sheet2SumRowNumber-1})`);
+    sheet2.getRange(sheet2SumRowNumber, Number(colNumber.get("monthlyAverage"))+2).setFormula(`=O${sheet2SumRowNumber}-P${sheet2SumRowNumber}`);
+    if (sheet2.getName() === "2022_2"){
+      sheet2.getRange("P29").setValue(115);
+    }
+    sheet2.hideColumns(Number(colNumber.get("startMonth")), Number(colNumber.get("monthlyAverage"))-Number(colNumber.get("startMonth"))-1);
   });
 }
 function getSheetAndSetValues_(sheetName, inputValues){
