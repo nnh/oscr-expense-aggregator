@@ -1,6 +1,7 @@
+const targetYears = [2022, 2023];
+
 function editSheetValues(){
   const inputSheetName = "List";
-  const targetYears = [2022, 2023];
   const colNumber = new Map([
     ["startMonth", 2],
     ["monthlyAverage", 15],
@@ -26,12 +27,17 @@ function editSheetValues(){
     sheet2.hideColumns(Number(colNumber.get("startMonth")), Number(colNumber.get("monthlyAverage"))-Number(colNumber.get("startMonth"))-1);
   });
 }
+
+function getSheet_(spreadsheet, sheetName){
+  let targetSheet = spreadsheet.getSheetByName(sheetName);
+  if (targetSheet === null){
+    targetSheet = spreadsheet.insertSheet();
+  }  
+  return(targetSheet);
+}
 function getSheetAndSetValues_(sheetName, inputValues){
-    let targetSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
-    if (targetSheet == null){
-      targetSheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet();
-      SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().setName(sheetName);
-    }  
+    const targetSheet = getSheet_(SpreadsheetApp.getActiveSpreadsheet(), sheetName);
+    targetSheet.setName(sheetName);
     targetSheet.clearContents();
     targetSheet.getRange(1, 1, inputValues.length, inputValues[0].length).setValues(inputValues);
     return(targetSheet);
